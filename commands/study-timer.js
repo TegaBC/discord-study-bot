@@ -1,14 +1,15 @@
 const { SlashCommandBuilder } = require("discord.js");
+const { userHasRow, createUserRow, incrementPoints } = require("../db-funcs.js")
 const wait = require("node:timers/promises").setTimeout;
+
+const POINTS_PER_MIN = 3
 
 const replies = {
     study: {
-        sessionStart: "Study is commencing",
-        sessionMiddle: "Midpoint of study has been reached.",
+        sessionStart: "📚 | Study is commencing",
     },
     break: {
-        sessionStart: "Break is starting, take a breather",
-        sessionMiddle: "Midpoint of break time has been reaeched.",
+        sessionStart: "⚽ | Break is starting, take a breather",
     }
 }
 
@@ -16,19 +17,43 @@ function oneDecimal(num) {
     return Math.round(num * 10) / 10
 }
 
+async function addPoints(table, userId, points) {
+
+    if (await userHasRow(table, userId) === null) { // check if user has row
+        createUserRow(table, userId) // create a user row
+        incrementPoints(table, userId, points)
+    }else {
+        incrementPoints(table, userId, points) // adds points
+    }
+}
+
 const beginSession = async (interaction, length, study) => {
     // save session in storage
-    interaction.client.sessionStorage[interaction.user.id] = {startTime: Date.now(), length: length, finishTime: Date.now() + length, study: study} // timestamp 
+    let finishTime = Date.now() + length
+    interaction.client.sessionStorage[interaction.user.id] = { startTime: Date.now(), 
+        length: length, 
+        finishTime: finishTime, 
+        study: study
+    }
 
     const channel = interaction.channel
     const user = interaction.user
-
     let replyOptions = study ? replies.study : replies.break
 
-    channel.send(`**SESSION** | ${replyOptions.sessionStart} | **${oneDecimal(length / 60_000)}m session.** | ${user.toString()}`)
-    await wait(length / 2)
-    channel.send(`**SESSION** | ${replyOptions.sessionMiddle} | **${oneDecimal((length / 2) / 60_000)}m left.** | ${user.toString()}`)
-    await wait(length / 2)
+    // send message, wait and then edit it to be com pleted
+    const originalMessage = await channel.send(`${replyOptions.sessionStart} | ⏰ Finishes <t:${Math.round(finishTime/1000)}:R> | ${user.toString()}`)
+    await wait(length)
+    originalMessage.edit(`${replyOptions.sessionStart} | ✅ | ${user.toString()}`)
+   
+    // give points if it was a study session
+    if (study) {
+        const pointsEarned = Math.max(Math.round((length / 60_000) * POINTS_PER_MIN), 1) // 
+        addPoints(interaction.client.db, user.id, pointsEarned) // give points to user
+    
+        channel.send(`💰 | ${user.toString()} | Earned **${pointsEarned} points** for **${length / 60_000}m** of study!`)
+    }
+
+    // remove current session from the object
     delete interaction.client.sessionStorage[interaction.user.id]
 }
 
@@ -46,27 +71,27 @@ module.exports = {
         .setDescription("How long (in minutes), should the break last?")
         .setRequired(true)
     )
-    .addNumberOption(option =>
+    .addIntegerOption(option =>
         option.setName("rounds")
         .setDescription("How many rounds (study, break and then study) should be set?")
     ),
 
     async execute(interaction) {
-        const rounds = interaction.options.getNumber("rounds") ?? 1
+        const rounds = Math.round(interaction.options.getNumber("rounds") ?? 1)
         const studyLength = interaction.options.getNumber("study-length") 
         const breakLength = interaction.options.getNumber("break-length")
         const channel = interaction.channel
 
-        await interaction.reply(`**SESSION** | Starting pomodoro ${interaction.user.toString()} | **(Study: ${studyLength}m, Break: ${breakLength}m)**`);
+        await interaction.reply(`🏎️ | Starting pomodoro ${interaction.user.toString()} | **(Study: ${studyLength}m, Break: ${breakLength}m)**`);
 
         for (let i = 1; i <= rounds; i++) {
             await beginSession(interaction, studyLength * 60_000, true)
             await beginSession(interaction, breakLength * 60_000, false)
             await beginSession(interaction, studyLength * 60_000, true)
             
-            if (rounds > 1) channel.send(`**SESSION** | ${i}/${rounds} rounds completed | ${user.toString()}`)
+            if (rounds > 1) channel.send(`📚 | ${i}/${rounds} rounds completed | ${user.toString()}`)
         }
 
-        channel.send(`**SESSION** | Study session completed! | ${interaction.user.toString()}`)
+        channel.send(`✅ | Session fully completed! | ${interaction.user.toString()}`)
 	},
 };
