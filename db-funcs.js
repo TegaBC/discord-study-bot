@@ -17,6 +17,11 @@ async function incrementPoints(table, userId, points) {
     return user
 }
 
+async function incrementTime(table, userId, mins) {
+    const user = await table.increment({study_time: mins}, { where: {userId: userId} })
+    return user
+}
+
 module.exports = {
-    userHasRow, createUserRow, incrementPoints
+    userHasRow, createUserRow, incrementPoints, incrementTime
 }
