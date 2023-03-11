@@ -7,3 +7,4 @@ Future Features:
 - Study time tracking
 - Study leaderboards
 - Random check ins (to verify you arent farming hours)
+- Group sessions
