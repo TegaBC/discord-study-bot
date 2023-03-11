@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const wait = require('node:timers/promises').setTimeout;
+const wait = require("node:timers/promises").setTimeout;
 
 const replies = {
     study: {
@@ -25,9 +25,9 @@ const beginSession = async (interaction, length, study) => {
 
     let replyOptions = study ? replies.study : replies.break
 
-    channel.send(`**SESSION** | ${replyOptions.sessionStart} | **${oneDecimal(length / 60_000)} minute session.** | ${user.toString()}`)
+    channel.send(`**SESSION** | ${replyOptions.sessionStart} | **${oneDecimal(length / 60_000)}m session.** | ${user.toString()}`)
     await wait(length / 2)
-    channel.send(`**SESSION** | ${replyOptions.sessionMiddle} | **${oneDecimal((length / 2) / 60_000)} minutes left.** | ${user.toString()}`)
+    channel.send(`**SESSION** | ${replyOptions.sessionMiddle} | **${oneDecimal((length / 2) / 60_000)}m left.** | ${user.toString()}`)
     await wait(length / 2)
     delete interaction.client.sessionStorage[interaction.user.id]
 }
@@ -53,20 +53,20 @@ module.exports = {
 
     async execute(interaction) {
         const rounds = interaction.options.getNumber("rounds") ?? 1
-        const studyLength = interaction.options.getNumber("study-length") * 60_000
-        const breakLength = interaction.options.getNumber("break-length") * 60_000
+        const studyLength = interaction.options.getNumber("study-length") 
+        const breakLength = interaction.options.getNumber("break-length")
         const channel = interaction.channel
 
-        await interaction.reply("**SESSION** | Initializing pomodoro session with" + interaction.user.toString());
+        await interaction.reply(`**SESSION** | Starting pomodoro ${interaction.user.toString()} | **(Study: ${studyLength}m, Break: ${breakLength}m)**`);
 
         for (let i = 1; i <= rounds; i++) {
-            await beginSession(interaction, studyLength, true)
-            await beginSession(interaction, breakLength, false)
-            await beginSession(interaction, studyLength, true)
+            await beginSession(interaction, studyLength * 60_000, true)
+            await beginSession(interaction, breakLength * 60_000, false)
+            await beginSession(interaction, studyLength * 60_000, true)
             
             if (rounds > 1) channel.send(`**SESSION** | ${i}/${rounds} rounds completed | ${user.toString()}`)
         }
 
-        channel.send(`**SESSION** | Study session completed! | ${user.toString()}`)
+        channel.send(`**SESSION** | Study session completed! | ${interaction.user.toString()}`)
 	},
 };
