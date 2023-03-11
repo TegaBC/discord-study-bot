@@ -19,7 +19,7 @@ async function trackTime(table, userId, time) {
         createUserRow(table, userId) // create a user row
         incrementTime(table, userId, time)
     }else {
-        incrementPoints(table, userId, time) // adds time
+        incrementTime(table, userId, time) // adds time
     }
 }
 
@@ -53,10 +53,7 @@ const beginSession = async (interaction, length, study) => {
    
     // give points if it was a study session
     if (study) {
-        const pointsEarned = Math.max(Math.round((length / 60_000) * POINTS_PER_MIN), 1) // 
-        addPoints(interaction.client.db, user.id, pointsEarned) // give points to user
-    
-        channel.send(`💰 | ${user.toString()} | Earned **${pointsEarned} points** for **${length / 60_000}m** of study!`)
+
     }
 
     // remove current session from the object
@@ -95,7 +92,13 @@ module.exports = {
             await beginSession(interaction, breakLength * 60_000, false)
             await beginSession(interaction, studyLength * 60_000, true)
             
-            trackTime(interaction.client.db, interaction.user.id)
+            // give points to user for study
+            const pointsEarned = Math.max(Math.round(length * POINTS_PER_MIN), 1)  
+            addPoints(interaction.client.db, user.id, pointsEarned)
+            channel.send(`💰 | ${user.toString()} | Earned **${pointsEarned} points** for **${length}m** of study!`)
+
+            //  track time
+            trackTime(interaction.client.db, interaction.user.id, studyLength * 2)
 
             if (rounds > 1) channel.send(`📚 | ${i}/${rounds} rounds completed | ${user.toString()}`)
         }
