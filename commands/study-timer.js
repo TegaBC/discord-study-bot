@@ -88,12 +88,14 @@ module.exports = {
         await interaction.reply(`🏎️ | Starting pomodoro ${interaction.user.toString()} | **(Study: ${studyLength}m, Break: ${breakLength}m)**`);
 
         for (let i = 1; i <= rounds; i++) {
+            if (i > 1) await beginSession(interaction, breakLength * 60_000, false) // for studies with multiple rounds we should start with a break
+
             await beginSession(interaction, studyLength * 60_000, true)
             await beginSession(interaction, breakLength * 60_000, false)
             await beginSession(interaction, studyLength * 60_000, true)
             
             // give points to user for study
-            const pointsEarned = Math.max(Math.round(length * POINTS_PER_MIN), 1)  
+            const pointsEarned = Math.max(Math.round((studyLength * 2) * POINTS_PER_MIN), 1)  
             addPoints(interaction.client.db, user.id, pointsEarned)
             channel.send(`💰 | ${user.toString()} | Earned **${pointsEarned} points** for **${length}m** of study!`)
 
