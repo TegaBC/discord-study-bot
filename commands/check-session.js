@@ -11,7 +11,7 @@ module.exports = {
 
         if (userStorage) {
             let timeLeft = (userStorage.finishTime -  Date.now()) / 60_000
-            await interaction.reply(`${interaction.user.toString()} has ${oneDecimal(timeLeft)} minutes left of their (${userStorage.study ? "study" : "break"}) session.`)
+            await interaction.reply(`${interaction.user.toString()} has ${oneDecimal(timeLeft)}m left of their ${userStorage.study ? "study" : "break"} session.`)
         } 
         else 
         {
