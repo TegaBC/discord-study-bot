@@ -6,6 +6,7 @@ const { token } = require('./config.json');
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.commands = new Collection();
+client.sessionStorage = []
 
 ////////////
 
