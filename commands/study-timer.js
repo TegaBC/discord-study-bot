@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { userHasRow, createUserRow, incrementPoints } = require("../db-funcs.js")
+const { userHasRow, createUserRow, incrementPoints, incrementTime } = require("../db-funcs.js")
 const wait = require("node:timers/promises").setTimeout;
 
 const POINTS_PER_MIN = 3
@@ -13,8 +13,14 @@ const replies = {
     }
 }
 
-function oneDecimal(num) {
-    return Math.round(num * 10) / 10
+async function trackTime(table, userId, time) {
+
+    if (await userHasRow(table, userId) === null) { // check if user has row
+        createUserRow(table, userId) // create a user row
+        incrementTime(table, userId, time)
+    }else {
+        incrementPoints(table, userId, time) // adds time
+    }
 }
 
 async function addPoints(table, userId, points) {
@@ -89,6 +95,8 @@ module.exports = {
             await beginSession(interaction, breakLength * 60_000, false)
             await beginSession(interaction, studyLength * 60_000, true)
             
+            trackTime(interaction.client.db, interaction.user.id)
+
             if (rounds > 1) channel.send(`📚 | ${i}/${rounds} rounds completed | ${user.toString()}`)
         }
 
