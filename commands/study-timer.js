@@ -5,12 +5,10 @@ const replies = {
     study: {
         sessionStart: "Study is commencing",
         sessionMiddle: "Midpoint of study has been reached.",
-        sessionEnd: "Study session has finished, well done."
     },
     break: {
         sessionStart: "Break is starting, take a breather",
         sessionMiddle: "Midpoint of break time has been reaeched.",
-        sessionEnd: "Break is over."
     }
 }
 
@@ -31,8 +29,6 @@ const beginSession = async (interaction, length, study) => {
     await wait(length / 2)
     channel.send(`**SESSION** | ${replyOptions.sessionMiddle} | **${oneDecimal((length / 2) / 60_000)} minutes left.** | ${user.toString()}`)
     await wait(length / 2)
-    channel.send(`**SESSION** | ${replyOptions.sessionEnd} | ${user.toString()}`)
-    await wait(500) // wait half a sec so it seems more fluid
     delete interaction.client.sessionStorage[interaction.user.id]
 }
 
@@ -59,6 +55,7 @@ module.exports = {
         const rounds = interaction.options.getNumber("rounds") ?? 1
         const studyLength = interaction.options.getNumber("study-length") * 60_000
         const breakLength = interaction.options.getNumber("break-length") * 60_000
+        const channel = interaction.channel
 
         await interaction.reply("**SESSION** | Initializing pomodoro session with" + interaction.user.toString());
 
@@ -66,6 +63,10 @@ module.exports = {
             await beginSession(interaction, studyLength, true)
             await beginSession(interaction, breakLength, false)
             await beginSession(interaction, studyLength, true)
+            
+            if (rounds > 1) channel.send(`**SESSION** | ${i}/${rounds} rounds completed | ${user.toString()}`)
         }
+
+        channel.send(`**SESSION** | Study session completed! | ${user.toString()}`)
 	},
 };
