@@ -80,12 +80,13 @@ module.exports = {
     ),
 
     async execute(interaction) {
-        const rounds = Math.round(interaction.options.getNumber("rounds") ?? 1)
+        const rounds = Math.round(interaction.options.getInteger("rounds") ?? 1)
         const studyLength = interaction.options.getNumber("study-length") 
         const breakLength = interaction.options.getNumber("break-length")
         const channel = interaction.channel
+        const user = interaction.user
 
-        await interaction.reply(`🏎️ | Starting pomodoro ${interaction.user.toString()} | **(Study: ${studyLength}m, Break: ${breakLength}m)**`);
+        await interaction.reply(`🏎️ | Starting pomodoro ${user.toString()} | **(Study: ${studyLength}m, Break: ${breakLength}m)**`);
 
         for (let i = 1; i <= rounds; i++) {
             if (i > 1) await beginSession(interaction, breakLength * 60_000, false) // for studies with multiple rounds we should start with a break
@@ -97,7 +98,7 @@ module.exports = {
             // give points to user for study
             const pointsEarned = Math.max(Math.round((studyLength * 2) * POINTS_PER_MIN), 1)  
             addPoints(interaction.client.db, user.id, pointsEarned)
-            channel.send(`💰 | ${user.toString()} | Earned **${pointsEarned} points** for **${length}m** of study!`)
+            channel.send(`💰 | ${user.toString()} | Earned **${pointsEarned} points** for **${studyLength}m** of study!`)
 
             //  track time
             trackTime(interaction.client.db, interaction.user.id, studyLength * 2)
