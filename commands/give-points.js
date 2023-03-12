@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js")
 const { userHasRow, createUserRow, incrementPoints } = require("../db-funcs.js")
 
-
 module.exports = {
 	data: new SlashCommandBuilder()
     .setName("add-points")
@@ -15,7 +14,8 @@ module.exports = {
         .setDescription("Total points to give")
         .setRequired(true))
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-	async execute(interaction) {
+	
+    async execute(interaction) {
         await interaction.deferReply()
 
         const user = interaction.user
